@@ -1,48 +1,76 @@
 <!doctype html>
-<!--
-@license
-Copyright (c) 2015 The Polymer Project Authors. All rights reserved.
-This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE.txt
-The complete set of authors may be found at http://polymer.github.io/AUTHORS.txt
-The complete set of contributors may be found at http://polymer.github.io/CONTRIBUTORS.txt
-Code distributed by Google as part of the polymer project is also
-subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
--->
 <html>
-  <head>
+
+<head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, minimum-scale=1.0, initial-scale=1.0, user-scalable=yes">
     <title>things-import-excel Demo</title>
     <script src="../../webcomponentsjs/webcomponents-lite.min.js"></script>
+    <link rel="import" href="../../iron-demo-helpers/demo-snippet.html">
+    <link rel="import" href="../../iron-demo-helpers/demo-pages-shared-styles.html">
+    <link rel="import" href="../../paper-button/paper-button.html">
+    <link rel="import" href="../../paper-input/paper-textarea.html">
     <link rel="import" href="../things-import-excel.html">
-  </head>
-  <body unresolved>
+</head>
 
-    <p>An example of <code>&lt;things-import-excel&gt;</code>:</p>
+<body unresolved>
+    <p class="paper-font-subhead">Things import Excel to Json</p>
+    <demo-snippet class="centered-demo">
+        <template>
+          <template is="dom-bind" id="demo">
+            <paper-textarea id ="result" label="Result" type="text"></paper-textarea>
+            <things-import-excel id="import-excel" handle-as="json" parsed-result="{{result}}"> </things-import-excel>
+            <paper-button raised id="import-btn"> importXLSX </paper-button>
+            <script>
+              var importBtn = document.querySelector("#import-btn");
+              importBtn.addEventListener('tap', importXLSX);
 
-    <p>Make words! <button id="saybtn">Say Something</button></p>
-    <p>Make lasers! <button id="laserbtn">Fire lasers</button></p>
+              var importExcel = document.querySelector("#import-excel");
+              importExcel.addEventListener('excel-process-finish', showResult)
+              
+              var result = document.querySelector("#result")
 
-    <things-import-excel author='{"name": "Lord Meowser", "image": "http://lorempixel.com/g/300/200/cats/"}' fancy>
-      <h2>Hello things-import-excel</h2>
-    </things-import-excel>
+              function importXLSX(e) {
+                  importExcel.import();
+              };
 
-    <script>
-      var seedElement = document.querySelector('things-import-excel');
+              function showResult (e) {
+                 result.value = JSON.stringify(demo.result); 
+              }
 
-      document.querySelector('#saybtn').addEventListener('click', function() {
-        alert(seedElement.sayHello('Hallo!'));
-      });
+            </script>
+          </template>
+        </template>
+    </demo-snippet>
 
-      document.querySelector('#laserbtn').addEventListener('click', function() {
-        seedElement.fireLasers();
-      });
+    <p class="paper-font-subhead">Things import Excel to Csv</p>
+    <demo-snippet class="centered-demo">
+        <template>
+          <template is="dom-bind" id="demo2">
+            <paper-textarea id ="csvresult" label="Result" type="text"></paper-textarea>
+            <things-import-excel id="import-excel-csv" handle-as="csv" parsed-result="{{result}}"> </things-import-excel>
+            <paper-button raised id="import-btn-csv"> importXLSX </paper-button>
+            <script>
+              var importBtnCsv = document.querySelector("#import-btn-csv");
+              importBtnCsv.addEventListener('tap', importXLSXtoCsv);
 
-      document.addEventListener("things-import-excel-lasers", function(e) {
-        console.log(e.detail.sound);
-      });
+              var importExcelCsv = document.querySelector("#import-excel-csv");
+              importExcelCsv.addEventListener('excel-process-finish', showCsvResult)
+              
+              var csvresult = document.querySelector("#csvresult")
 
-    </script>
+              function importXLSXtoCsv(e) {
+                  importExcelCsv.import();
+              };
 
-  </body>
+              function showCsvResult (e) {
+                 csvresult.value = demo2.result.toString(); 
+              }
+
+            </script>
+          </template>
+        </template>
+    </demo-snippet>
+</body>
+
 </html>

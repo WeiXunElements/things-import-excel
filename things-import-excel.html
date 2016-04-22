@@ -1,151 +1,203 @@
-<!--
-@license
-Copyright (c) 2015 The Polymer Project Authors. All rights reserved.
-This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE.txt
-The complete set of authors may be found at http://polymer.github.io/AUTHORS.txt
-The complete set of contributors may be found at http://polymer.github.io/CONTRIBUTORS.txt
-Code distributed by Google as part of the polymer project is also
-subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
--->
-
 <link rel="import" href="../polymer/polymer.html">
+<script src='../js-xlsx/jszip.js'></script>
+<script src='../js-xlsx/ods.js'></script>
+<script src='../js-xlsx/xlsx.js'></script>
 
 <!--
-An element providing a solution to no problem in particular.
+Import Excel은 JS-XLSX를 이용하여 정형화된 Excel을 Json또는 CSV로 바꾸는 도구다.
+해당 Element을 생성하고 import를 Call해 줘야 Import화면이 나온다.
+Excel Parse가 완료되면 excel-process-finish Event가 fire된다.
 
 Example:
 
-    <things-import-excel></things-import-excel>
+      <paper-input id ="result" label="Result" type="text"></paper-input>
+      <things-import-excel id="import-excel" handle-as ="json" parsed-result="{{result}}"> </things-import-excel>
+      <paper-button raised id="import-btn"> importXLSX </paper-button>
+      <script>
+        var importBtn = document.querySelector("#import-btn");
+        importBtn.addEventListener('tap', importXLSX);
 
-Example:
+        var importExcel = document.querySelector("#import-excel");
+        importExcel.addEventListener('excel-process-finish', showResult)
+        
+        var result = document.querySelector("#result")
 
-    <things-import-excel>
-      <h2>Hello things-import-excel</h2>
-    </things-import-excel>
+        function importXLSX(e) {
+            importExcel.import();
+        };
+
+        function showResult (e) {
+           result.value = JSON.stringify(demo.result); 
+        }
+
+      </script>
 
 @demo demo/index.html
-@hero hero.svg
 -->
 
 <dom-module id="things-import-excel">
+  
   <template>
-    <style>
-      :host {
-        display: block;
-        box-sizing: border-box;
-      }
-
-      .author img {
-        display: block;
-        float: left;
-        margin-right: 5px;
-        max-height: 100px;
-        max-width: 100px;
-      }
-    </style>
-
-    <h1>&lt;things-import-excel&gt;</h1>
-    <content></content>
-    <p class="author">
-      <img src$="{{author.image}}">
-      Cheers,<br/>
-      <span class="name">{{author.name}}</span>
-    </p>
+    <input type="file" id="fileInput" on-change="_handleFile" 
+    accept="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" hidden="[[hidden]]">
   </template>
 
   <script>
     Polymer({
+
       is: 'things-import-excel',
 
       properties: {
         /**
-         * `fancy` indicates that the element should don a monocle and tophat,
-         * while checking its pocket watch.
+         * handel excel as json/csv
+         * defualt uses json
          */
-        fancy: Boolean,
-
-        /**
-         * Describes the author of the element, but is really just an excuse to
-         * show off JSDoc annotations.
-         *
-         * @type {{name: string, image: string}}
-         */
-        author: {
-          type: Object,
-          // Use `value` to provide a default value for a property, by setting it
-          // on your element's prototype.
-          //
-          // If you provide a function, as we do here, Polymer will call that
-          // _per element instance_.
-          //
-          // We do that to ensure that each element gets its own copy of the
-          // value, rather than having it shared across all instances (via the
-          // prototype).
-          value: function() {
-            return {
-              name:  'Dimitri Glazkov',
-              image: 'http://addyosmani.com/blog/wp-content/uploads/2013/04/unicorn.jpg',
-            };
-          }
+        handleAs:{
+          type:String,
+          value:'json'
         },
-      },
-
-      // Element Lifecycle
-
-      ready: function() {
-        // `ready` is called after all elements have been configured, but
-        // propagates bottom-up. This element's children are ready, but parents
-        // are not.
-        //
-        // This is the point where you should make modifications to the DOM (when
-        // necessary), or kick off any processes the element wants to perform.
-      },
-
-      attached: function() {
-        // `attached` fires once the element and its parents have been inserted
-        // into a document.
-        //
-        // This is a good place to perform any work related to your element's
-        // visual state or active behavior (measuring sizes, beginning animations,
-        // loading resources, etc).
-      },
-
-      detached: function() {
-        // The analog to `attached`, `detached` fires when the element has been
-        // removed from a document.
-        //
-        // Use this to clean up anything you did in `attached`.
-      },
-
-      // Element Behavior
-
-      /**
-       * Sometimes it's just nice to say hi.
-       *
-       * @param {string} greeting A positive greeting.
-       * @return {string} The full greeting.
-       */
-      sayHello: function(greeting) {
-        var response = greeting || 'Hello World!';
-        return 'things-import-excel says, ' + response;
+        /**
+         * XLSX Object, can not set from out side of this componet
+         */
+        excel:{
+          type : Object,
+          value: XLSX,
+          readonly:true
+        },
+        
+        /**
+         * parsed data result
+         */
+        parsedResult:{
+          type:Object,
+          notify:true
+        },
+        /**
+         * sheet name that you wanna to parse, if not will parse all
+         * sheet in work book
+         */
+        sheetName:{
+          type:String
+        },
+        /**
+         * hidden attribute
+         */
+        hidden:{
+          type:Boolean,
+          value:true
+        }
       },
 
       /**
-       * The `things-import-excel-lasers` event is fired whenever `fireLasers` is called.
-       *
-       * @event things-import-excel-lasers
-       * @detail {{sound: String}}
+       * transfer workbook to json data
        */
+      _toJson: function (workbook) {
+        var result = {};
+        var me = this;
+        if(me.sheetName){
+          var items = me.excel.utils.sheet_to_row_object_array(workbook.Sheets[me.sheetName]);
+          var total = items.length;
+          if(me.rootProperty)
+          {
+            result[me.rootProperty] = items;
+            result[me.totalProperty] = total;
+          }else{
+            result = items;
+          }
+          return result;
+        }else{
+          workbook.SheetNames.forEach(function(sheetName) {
+            var roa = me.excel.utils.sheet_to_row_object_array(workbook.Sheets[sheetName]);
+            var total = roa.length;
+            if(roa.length > 0){
+              result[sheetName]={};
+              if(me.rootProperty)
+              {
+                result[sheetName][this.rootProperty] = roa;
+                result[sheetName][this.totalProperty] = total
+              }else{
+                result[sheetName] = roa;
+              }
+            }
+          });
+          return result;
+        }
+      },
+      /**
+       * transfer workbood data to csv data
+       */
+      _toCsv : function (workbook) {
+        var result = [];
+        var me = this;
+        if(me.sheetName){
+          var csv = me.excel.utils.sheet_to_csv(workbook.Sheets[me.sheetName]);
+          if(csv.length>0){
+            result.push(csv);
+          }
+        }else{
+          workbook.SheetNames.forEach(function(sheetName) {
+            var csv = me.excel.utils.sheet_to_csv(workbook.Sheets[sheetName]);
+            if(csv.length > 0){
+              result.push("SHEET: " + sheetName);
+              result.push("");
+              result.push(csv);
+              result.push("");
+            }
+          });
+        }
+        return result.join("\n");
+      },
+      /**
+       * transfer xlsx to json and csv
+       *
+       * when finished transfer event excel-process-finish will be called
+       * 
+       * @event excel-process-finish
+       */
+      _processWorkbook : function (workbook) {
+        var output = "";
+        switch(this.handleAs) {
+          case "csv":
+            output = this._toCsv(workbook);
+            this.parsedResult = output;
+            break;
+          default:
+            output = JSON.stringify(this._toJson(workbook), 2, 2);
+            this.parsedResult = JSON.parse(output);
+        }
+        
+        this.fire('excel-process-finish',this.parsedResult);
+      },
 
       /**
-       * Attempt to destroy this element's enemies with a beam of light!
-       *
-       * Or, at least, dispatch an event in the vain hope that someone else will
-       * do the zapping.
+       * read and register handler when file loaded
        */
-      fireLasers: function() {
-        this.fire('things-import-excel-lasers', {sound: 'Pew pew!'});
+      _handleFile :function (event) {
+        var file = event.target.files[0];
+        var reader = new FileReader();
+        var me = this;
+
+        //register event listner
+        reader.onload = function(event) {
+          var data = event.target.result;
+          workbook = me.excel.read(data, {type: 'binary'});
+          me._processWorkbook(workbook);
+        };
+        //read file as binary string
+        reader.readAsBinaryString(file);
+      },
+      /**
+       * Clicks the invisible file input
+      */
+      import: function() {
+        var elem = this.$.fileInput;
+        if (elem && document.createEvent) {
+          var event = document.createEvent('MouseEvents');
+          event.initEvent("click", true, false);
+          elem.dispatchEvent(event);
+        }
       }
+
     });
   </script>
 </dom-module>
