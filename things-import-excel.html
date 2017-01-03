@@ -175,7 +175,12 @@ Example:
         }
 
         if(found && found.length > 0) {
-          return found[0].name;
+          var column = found[0];
+          if(column.styles && column.styles.iconIndex == 'resource-selector') {
+            return (column.userData && column.userData.originalField) ? column.userData.originalField : column.name;
+          } else {
+            return column.name;
+          }
         } else {          
           return false;
         }
