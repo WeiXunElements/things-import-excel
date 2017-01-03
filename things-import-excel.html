@@ -1,36 +1,39 @@
 <link rel="import" href="../polymer/polymer.html">
+
+<link rel="import" href="../things-msg-box-behavior/things-msg-box-behavior.html">
+
 <script src='jszip.js'></script>
 <script src='ods.js'></script>
 <script src='xlsx.js'></script>
 
 <!--
-Import Excel은 JS-XLSX를 이용하여 정형화된 Excel을 Json또는 CSV로 바꾸는 도구다.
-해당 Element을 생성하고 import를 Call해 줘야 Import화면이 나온다.
-Excel Parse가 완료되면 excel-process-finish Event가 fire된다.
+Import Excel은 JS-XLSX를 이용하여 정형화된 Excel을 json 또는 CSV로 바꾸는 도구다.
+해당 Element을 생성하고 import를 Call해 줘야 Import 화면이 나온다.
+Excel 파싱이 완료되면 excel-process-finish Event가 fire된다.
 
 Example:
 
-      <paper-input id ="result" label="Result" type="text"></paper-input>
-      <things-import-excel id="import-excel" handle-as ="json" parsed-result="{{result}}"> </things-import-excel>
-      <paper-button raised id="import-btn"> importXLSX </paper-button>
-      <script>
-        var importBtn = document.querySelector("#import-btn");
-        importBtn.addEventListener('tap', importXLSX);
+    <paper-input id ="result" label="Result" type="text"></paper-input>
+    <things-import-excel id="import-excel" handle-as ="json" parsed-result="{{result}}"> </things-import-excel>
+    <paper-button raised id="import-btn"> importXLSX </paper-button>
+    <script>
+      var importBtn = document.querySelector("#import-btn");
+      importBtn.addEventListener('tap', importXLSX);
 
-        var importExcel = document.querySelector("#import-excel");
-        importExcel.addEventListener('excel-process-finish', showResult)
-        
-        var result = document.querySelector("#result")
+      var importExcel = document.querySelector("#import-excel");
+      importExcel.addEventListener('excel-process-finish', showResult)
+      
+      var result = document.querySelector("#result")
 
-        function importXLSX(e) {
-            importExcel.import();
-        };
+      function importXLSX(e) {
+          importExcel.import();
+      };
 
-        function showResult (e) {
-           result.value = JSON.stringify(demo.result); 
-        }
+      function showResult (e) {
+         result.value = JSON.stringify(demo.result); 
+      }
 
-      </script>
+    </script>
 
 @demo demo/index.html
 -->
@@ -38,8 +41,12 @@ Example:
 <dom-module id="things-import-excel">
   
   <template>
-    <input type="file" id="fileInput" on-change="_handleFile" 
-    accept="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" hidden="[[hidden]]">
+    <input 
+      type="file" 
+      id="fileInput" 
+      on-change="_handleFile" 
+      accept="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" 
+      hidden="[[hidden]]">
   </template>
 
   <script>
@@ -47,44 +54,130 @@ Example:
 
       is: 'things-import-excel',
 
+      behaviors: [
+        Things.MsgBoxBehavior
+      ],      
+
       properties: {
         /**
          * handel excel as json/csv
          * defualt uses json
          */
-        handleAs:{
-          type:String,
-          value:'json'
+        handleAs: {
+          type: String,
+          value: 'json'
         },
+
         /**
          * XLSX Object, can not set from out side of this componet
          */
-        excel:{
-          type : Object,
+        excel: {
+          type: Object,
           value: XLSX,
-          readonly:true
+          readonly: true
         },
         
         /**
          * parsed data result
          */
-        parsedResult:{
-          type:Object,
-          notify:true
+        parsedResult: {
+          type: Object,
+          notify: true
         },
+
         /**
-         * sheet name that you wanna to parse, if not will parse all
-         * sheet in work book
+         * sheet name that you wanna to parse, if not will parse all sheet in work book
          */
-        sheetName:{
-          type:String
+        sheetName: {
+          type: String
         },
+
         /**
          * hidden attribute
          */
-        hidden:{
-          type:Boolean,
-          value:true
+        hidden: {
+          type: Boolean,
+          value: true
+        },
+
+        /**
+         * Grid columns
+         */
+        gridColumns: {
+          type: Array
+        }
+      },
+
+      /**
+       * Check Excel Data
+       *
+       * @param {Array} items
+       */
+      _checkExcelData: function(items) {
+        var item = items[0];
+        var fieldMapping = this._fieldMapping(item);
+        if(!fieldMapping) return false;
+
+        items.forEach(function(item) {
+          for(var prop in fieldMapping) {
+            var val = item[prop];
+            var realProp = fieldMapping[prop];
+            delete item[prop];
+            item[realProp] = val;
+          }
+        });
+
+        return items;
+      },
+
+      /**
+       * 필드명이 다국어 적용되서 올라왔을 경우 처리 
+       *
+       * @param {Object} item
+       */
+      _fieldMapping: function(item) {
+        var mapping = {};
+        var valid = true;
+
+        for (var prop in item) {
+          var fieldName = this._findFieldName(prop);
+          if(!fieldName) {
+            this.openInfoMsg({ 
+              title : Things.DataGlobal.t('error.VALIDATION_ERROR'), 
+              text : Things.DataGlobal.t('text.invalid_input') + ' (' + prop + ')', 
+              type : 'error', 
+              timer : 10000 
+            });
+            valid = false;
+            break;
+          } else {
+            mapping[prop] = fieldName;
+          }
+        }
+
+        return valid ? mapping : valid;
+      },
+
+      /**
+       * 그리드 컬럼에서 다국어 적용된 필드명 혹은 오브젝트의 실제 필드명으로 오브젝트의 실제 필드명을 찾아 리턴 
+       *
+       * @param {Object} item
+       */
+      _findFieldName: function(fieldName) {
+        var found = this.gridColumns.filter(function(col) {
+          return col.name == fieldName;
+        });
+
+        if(!found || found.length == 0) {
+          found = this.gridColumns.filter(function(col) {
+            return col.header && col.header.text == fieldName;
+          });
+        }
+
+        if(found && found.length > 0) {
+          return found[0].name;
+        } else {          
+          return false;
         }
       },
 
@@ -94,85 +187,114 @@ Example:
       _toJson: function (workbook) {
         var result = {};
         var me = this;
-        if(me.sheetName){
+
+        if(me.sheetName) {
           var items = me.excel.utils.sheet_to_row_object_array(workbook.Sheets[me.sheetName]);
-          var total = items.length;
-          if(me.rootProperty)
-          {
-            result[me.rootProperty] = items;
-            result[me.totalProperty] = total;
-          }else{
-            result = items;
+          if(items.length > 1) {
+            try {
+              items = me._checkExcelData(items);
+            } catch (e) {
+              return false;
+            }
+
+            var total = items.length;
+
+            if(me.rootProperty) {
+              result[me.rootProperty] = items;
+              result[me.totalProperty] = total;
+            } else {
+              result = items;
+            }
           }
+
           return result;
-        }else{
+
+        } else {
           workbook.SheetNames.forEach(function(sheetName) {
             var roa = me.excel.utils.sheet_to_row_object_array(workbook.Sheets[sheetName]);
             var total = roa.length;
-            if(roa.length > 0){
-              result[sheetName]={};
-              if(me.rootProperty)
-              {
-                result[sheetName][this.rootProperty] = roa;
-                result[sheetName][this.totalProperty] = total
-              }else{
+
+            if(roa.length > 0) {
+              result[sheetName] = {};
+
+              if(me.rootProperty) {
+                result[sheetName][me.rootProperty] = roa;
+                result[sheetName][me.totalProperty] = total
+              } else {
                 result[sheetName] = roa;
               }
             }
           });
+
           return result;
         }
       },
+
       /**
        * transfer workbood data to csv data
+       *
+       * @param {Object} workbook
        */
-      _toCsv : function (workbook) {
+      _toCsv: function (workbook) {
         var result = [];
         var me = this;
-        if(me.sheetName){
+
+        if(me.sheetName) {
+          // FIXME - 
           var csv = me.excel.utils.sheet_to_csv(workbook.Sheets[me.sheetName]);
-          if(csv.length>0){
-            result.push(csv);
-          }
-        }else{
+          if(csv.length > 0) result.push(csv);
+
+        } else {
           workbook.SheetNames.forEach(function(sheetName) {
             var csv = me.excel.utils.sheet_to_csv(workbook.Sheets[sheetName]);
-            if(csv.length > 0){
-              result.push("SHEET: " + sheetName);
-              result.push("");
+            if(csv.length > 0) {
+              result.push('SHEET: ' + sheetName);
+              result.push('');
               result.push(csv);
-              result.push("");
+              result.push('');
             }
           });
         }
-        return result.join("\n");
+
+        return result.join('\n');
       },
+
       /**
        * transfer xlsx to json and csv
        *
        * when finished transfer event excel-process-finish will be called
        * 
+       * @param {Object} workbook
        * @event excel-process-finish
        */
-      _processWorkbook : function (workbook) {
-        var output = "";
+      _processWorkbook: function (workbook) {
+        var output = null;
+
         switch(this.handleAs) {
-          case "csv":
+          case 'csv':
             output = this._toCsv(workbook);
             this.parsedResult = output;
             break;
+
           default:
-            output = JSON.stringify(this._toJson(workbook), 2, 2);
-            this.parsedResult = JSON.parse(output);
+            var jsonData = this._toJson(workbook);
+            if(jsonData != false) {
+              output = JSON.stringify(jsonData, 2, 2);
+              this.parsedResult = JSON.parse(output);
+            }
         }
-        
-        this.fire('excel-process-finish',this.parsedResult);
+
+        if(output != null) {
+          this.fire('excel-process-finish', this.parsedResult);
+        }
       },
 
       /**
        * read and register handler when file loaded
+       *
+       * @param {Object} event
        */
-      _handleFile :function (event) {
+      _handleFile: function (event) {
         var file = event.target.files[0];
         var reader = new FileReader();
         var me = this;
@@ -180,24 +302,25 @@ Example:
         //register event listner
         reader.onload = function(event) {
           var data = event.target.result;
-          workbook = me.excel.read(data, {type: 'binary'});
+          workbook = me.excel.read(data, { type: 'binary' });
           me._processWorkbook(workbook);
         };
+
         //read file as binary string
         reader.readAsBinaryString(file);
       },
+
       /**
        * Clicks the invisible file input
-      */
+       */
       import: function() {
         var elem = this.$.fileInput;
         if (elem && document.createEvent) {
           var event = document.createEvent('MouseEvents');
-          event.initEvent("click", true, false);
+          event.initEvent('click', true, false);
           elem.dispatchEvent(event);
         }
       }
-
     });
   </script>
 </dom-module>
