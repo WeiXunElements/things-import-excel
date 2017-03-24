@@ -4,14 +4,18 @@
 <link rel="import" href="../things-libraries/things-jszip-lib.html">
 <link rel="import" href="../things-libraries/things-jsxlsx-lib.html">
 <!--
+## things-import-excel
+
 Import Excel은 JS-XLSX를 이용하여 정형화된 Excel을 json 또는 CSV로 바꾸는 도구다.
+
 해당 Element을 생성하고 import를 Call해 줘야 Import 화면이 나온다.
+
 Excel 파싱이 완료되면 excel-process-finish Event가 fire된다.
 
-Example:
+### Example:
 
-    <paper-input id ="result" label="Result" type="text"></paper-input>
-    <things-import-excel id="import-excel" handle-as ="json" parsed-result="{{result}}"> </things-import-excel>
+    <paper-input id="result" label="Result" type="text"></paper-input>
+    <things-import-excel id="import-excel" handle-as="json" parsed-result="{{result}}"> </things-import-excel>
     <paper-button raised id="import-btn"> importXLSX </paper-button>
     <script>
       var importBtn = document.querySelector("#import-btn");
@@ -52,8 +56,16 @@ Example:
 
             properties: {
                 /**
+                 * en-us
+                 *
                  * handel excel as json/csv
                  * defualt uses json
+                 *
+                 * ko-kr
+                 *
+                 * 출력 타입설정,defualt값은 json이다.
+                 * *******
+                 * @type {String}
                  */
                 handleAs: {
                     type: String,
@@ -61,7 +73,15 @@ Example:
                 },
 
                 /**
+                 * en-us
+                 *
                  * XLSX Object, can not set from out side of this componet
+                 *
+                 * ko-kr
+                 *
+                 * excel 타입은 XLSX Object만 가능,Readonly.
+                 * ******
+                 * @type {Object}
                  */
                 excel: {
                     type: Object,
@@ -70,7 +90,15 @@ Example:
                 },
 
                 /**
+                 * en-us
+                 *
                  * parsed data result
+                 *
+                 * ko-kr
+                 *
+                 * parsed data result
+                 * ******
+                 * @type {Object}
                  */
                 parsedResult: {
                     type: Object,
@@ -78,14 +106,30 @@ Example:
                 },
 
                 /**
+                 * en-us
+                 *
                  * sheet name that you wanna to parse, if not will parse all sheet in work book
+                 *
+                 * ko-kr
+                 *
+                 * 액셀파일의 sheetName
+                 * *******
+                 * @type {String}
                  */
                 sheetName: {
                     type: String
                 },
 
                 /**
+                 * en-us
+                 *
                  * hidden attribute
+                 *
+                 * ko-kr
+                 *
+                 * 숨김 속성
+                 * ********
+                 * @type {Boolean}
                  */
                 hidden: {
                     type: Boolean,
@@ -93,7 +137,15 @@ Example:
                 },
 
                 /**
+                 * en-us
+                 *
                  * Grid columns
+                 *
+                 * ko-kr
+                 *
+                 * 그리드 콜룸
+                 * *****
+                 * @type {Array}
                  */
                 gridColumns: {
                     type: Array
@@ -101,8 +153,14 @@ Example:
             },
 
             /**
+             * en-us
+             *
              * Check Excel Data
              *
+             * ko-kr
+             *
+             * 액셀 데이터 체크
+             * ******
              * @param {Array} items
              */
             _checkExcelData: function(items) {
@@ -124,7 +182,7 @@ Example:
 
             /**
              * 필드명이 다국어 적용되서 올라왔을 경우 처리
-             *
+             **********
              * @param {Object} item
              */
             _fieldMapping: function(item) {
@@ -152,7 +210,7 @@ Example:
 
             /**
              * 그리드 컬럼에서 다국어 적용된 필드명 혹은 오브젝트의 실제 필드명으로 오브젝트의 실제 필드명을 찾아 리턴
-             *
+             *********
              * @param {Object} item
              */
             _findFieldName: function(fieldName) {
@@ -179,7 +237,14 @@ Example:
             },
 
             /**
+             * en-us
+             *
              * transfer workbook to json data
+             * ko-kr
+             *
+             * workbook을 json data로 전환
+             * *******
+             *
              */
             _toJson: function(workbook) {
                 var result = {};
@@ -257,10 +322,15 @@ Example:
             },
 
             /**
-             * transfer xlsx to json and csv
+             * en-us
              *
+             * transfer xlsx to json and csv
              * when finished transfer event excel-process-finish will be called
              *
+             * ko-kr
+             *
+             * xlsx파일을 json/csv로 전환,전환완료되면 이벤트:excel-process-finish 발생
+             * ********
              * @param {Object} workbook
              * @event excel-process-finish
              */
@@ -310,7 +380,14 @@ Example:
             },
 
             /**
+             * en-us
+             *
              * Clicks the invisible file input
+             *
+             * ko-kr
+             *
+             * invisible 파일 입력
+             * ********
              */
             import: function() {
                 var elem = this.$.fileInput;
