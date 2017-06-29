@@ -1,3 +1,7 @@
+<!--
+@license
+Copyright (c) 2017, HatioLab Inc. All right reserved.
+-->
 <!doctype html>
 <html>
 
@@ -27,8 +31,8 @@
 
               var importExcel = document.querySelector("#import-excel");
               importExcel.addEventListener('excel-process-finish', showResult)
-              
-              var result = document.querySelector("#result")
+
+                            var result = document.querySelector("#result")
 
               function importXLSX(e) {
                   importExcel.import();
@@ -56,8 +60,8 @@
 
               var importExcelCsv = document.querySelector("#import-excel-csv");
               importExcelCsv.addEventListener('excel-process-finish', showCsvResult)
-              
-              var csvresult = document.querySelector("#csvresult")
+
+                            var csvresult = document.querySelector("#csvresult")
 
               function importXLSXtoCsv(e) {
                   importExcelCsv.import();
