@@ -1,10 +1,10 @@
 # things-import-excel
 
-## Import Excel은 JS-XLSX를 이용하여 정형화된 Excel을 json 또는 CSV로 바꾸는 도구다.
+## Import Excel is a tool that converts standardized Excel into json or CSV using JS-XLSX.
 
-    해당 컴포넌트을 사용하고 import Function을 호출해 줘야 Import 화면이 나온다.
+    The Import screen will appear only if you use the corresponding component and call the import function.
 
-    Excel 파싱이 완료되면 `excel-process-finish` Event가 발생된다.
+    When Excel parsing is completed, an `excel-process-finish` event is generated.
 
 Example:
 
@@ -35,8 +35,7 @@ Example:
 
 ## Dependencies
 
-Element dependencies are managed via [Bower](http://bower.io/). You can
-install that via:
+Element dependencies are managed via [Bower](http://bower.io/). You can install that via:
 
     npm install -g bower
 
