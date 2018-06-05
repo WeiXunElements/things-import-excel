@@ -256,7 +256,7 @@ Excel 파싱이 완료되면 excel-process-finish Event가 fire된다.
 
                 if (me.sheetName) {
                     var items = me.excel.utils.sheet_to_row_object_array(workbook.Sheets[me.sheetName]);
-                    if (items.length > 1) {
+                    if (items.length > 0) {
                         try {
                             items = me._checkExcelData(items);
                         } catch (e) {
