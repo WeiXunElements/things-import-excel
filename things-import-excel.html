@@ -168,11 +168,12 @@ Excel 파싱이 완료되면 excel-process-finish Event가 fire된다.
              * @param {Array} items
              */
             _checkExcelData: function(items) {
-                var item = items[0];
-                var fieldMapping = this._fieldMapping(item);
-                if (!fieldMapping) return false;
+                if (!items) return false;
 
-                items.forEach(function(item) {
+                items.forEach(item => {
+                    let fieldMapping = this._fieldMapping(item);
+                    if (!fieldMapping) return false;
+
                     for (var prop in fieldMapping) {
                         var val = item[prop];
                         var realProp = fieldMapping[prop];
