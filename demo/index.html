@@ -1,80 +1,76 @@
 <!--
 @license
-Copyright © HatioLab Inc. All rights reserved.
+Copyright © 2015-2021 Shenzhen Weixun All rights reserved.
 -->
-<!doctype html>
+<!DOCTYPE html>
 <html>
-
-<head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, minimum-scale=1.0, initial-scale=1.0, user-scalable=yes">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, minimum-scale=1.0, initial-scale=1.0, user-scalable=yes" />
     <title>things-import-excel Demo</title>
     <script src="../../webcomponentsjs/webcomponents-lite.min.js"></script>
-    <link rel="import" href="../../iron-demo-helpers/demo-snippet.html">
-    <link rel="import" href="../../iron-demo-helpers/demo-pages-shared-styles.html">
-    <link rel="import" href="../../paper-button/paper-button.html">
-    <link rel="import" href="../../paper-input/paper-textarea.html">
-    <link rel="import" href="../things-import-excel.html">
-</head>
+    <link rel="import" href="../../iron-demo-helpers/demo-snippet.html" />
+    <link rel="import" href="../../iron-demo-helpers/demo-pages-shared-styles.html" />
+    <link rel="import" href="../../paper-button/paper-button.html" />
+    <link rel="import" href="../../paper-input/paper-textarea.html" />
+    <link rel="import" href="../things-import-excel.html" />
+  </head>
 
-<body unresolved>
+  <body unresolved>
     <p class="paper-font-subhead">Things import Excel to Json</p>
     <demo-snippet class="centered-demo">
-        <template>
-          <template is="dom-bind" id="demo">
-            <paper-textarea id ="result" label="Result" type="text"></paper-textarea>
-            <things-import-excel id="import-excel" handle-as="json" parsed-result="{{result}}"> </things-import-excel>
-            <paper-button raised id="import-btn"> importXLSX </paper-button>
-            <script>
-              var importBtn = document.querySelector("#import-btn");
-              importBtn.addEventListener('tap', importXLSX);
+      <template>
+        <template is="dom-bind" id="demo">
+          <paper-textarea id="result" label="Result" type="text"></paper-textarea>
+          <things-import-excel id="import-excel" handle-as="json" parsed-result="{{result}}"> </things-import-excel>
+          <paper-button raised id="import-btn"> importXLSX </paper-button>
+          <script>
+            var importBtn = document.querySelector("#import-btn");
+            importBtn.addEventListener("tap", importXLSX);
 
-              var importExcel = document.querySelector("#import-excel");
-              importExcel.addEventListener('excel-process-finish', showResult)
+            var importExcel = document.querySelector("#import-excel");
+            importExcel.addEventListener("excel-process-finish", showResult);
 
-                            var result = document.querySelector("#result")
+            var result = document.querySelector("#result");
 
-              function importXLSX(e) {
-                  importExcel.import();
-              };
+            function importXLSX(e) {
+              importExcel.import();
+            }
 
-              function showResult (e) {
-                 result.value = JSON.stringify(demo.result); 
-              }
-
-            </script>
-          </template>
+            function showResult(e) {
+              result.value = JSON.stringify(demo.result);
+            }
+          </script>
         </template>
+      </template>
     </demo-snippet>
 
     <p class="paper-font-subhead">Things import Excel to Csv</p>
     <demo-snippet class="centered-demo">
-        <template>
-          <template is="dom-bind" id="demo2">
-            <paper-textarea id ="csvresult" label="Result" type="text"></paper-textarea>
-            <things-import-excel id="import-excel-csv" handle-as="csv" parsed-result="{{result}}"> </things-import-excel>
-            <paper-button raised id="import-btn-csv"> importXLSX </paper-button>
-            <script>
-              var importBtnCsv = document.querySelector("#import-btn-csv");
-              importBtnCsv.addEventListener('tap', importXLSXtoCsv);
+      <template>
+        <template is="dom-bind" id="demo2">
+          <paper-textarea id="csvresult" label="Result" type="text"></paper-textarea>
+          <things-import-excel id="import-excel-csv" handle-as="csv" parsed-result="{{result}}"> </things-import-excel>
+          <paper-button raised id="import-btn-csv"> importXLSX </paper-button>
+          <script>
+            var importBtnCsv = document.querySelector("#import-btn-csv");
+            importBtnCsv.addEventListener("tap", importXLSXtoCsv);
 
-              var importExcelCsv = document.querySelector("#import-excel-csv");
-              importExcelCsv.addEventListener('excel-process-finish', showCsvResult)
+            var importExcelCsv = document.querySelector("#import-excel-csv");
+            importExcelCsv.addEventListener("excel-process-finish", showCsvResult);
 
-                            var csvresult = document.querySelector("#csvresult")
+            var csvresult = document.querySelector("#csvresult");
 
-              function importXLSXtoCsv(e) {
-                  importExcelCsv.import();
-              };
+            function importXLSXtoCsv(e) {
+              importExcelCsv.import();
+            }
 
-              function showCsvResult (e) {
-                 csvresult.value = demo2.result.toString(); 
-              }
-
-            </script>
-          </template>
+            function showCsvResult(e) {
+              csvresult.value = demo2.result.toString();
+            }
+          </script>
         </template>
+      </template>
     </demo-snippet>
-</body>
-
+  </body>
 </html>

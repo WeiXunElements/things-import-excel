@@ -1,12 +1,12 @@
 <!--
 @license
-Copyright © HatioLab Inc. All rights reserved.
+Copyright © 2015-2021 Shenzhen Weixun All rights reserved.
 -->
-<link rel="import" href="../polymer/polymer.html">
+<link rel="import" href="../polymer/polymer.html" />
 
-<link rel="import" href="../things-msg-box-behavior/things-msg-box-behavior.html">
-<link rel="import" href="../things-libraries/things-jszip-lib.html">
-<link rel="import" href="../things-libraries/things-jsxlsx-lib.html">
+<link rel="import" href="../things-msg-box-behavior/things-msg-box-behavior.html" />
+<link rel="import" href="../things-libraries/things-jszip-lib.html" />
+<link rel="import" href="../things-libraries/things-jsxlsx-lib.html" />
 <!--
 ## things-import-excel
 
@@ -44,365 +44,364 @@ Excel 파싱이 완료되면 excel-process-finish Event가 fire된다.
 -->
 
 <dom-module id="things-import-excel">
+  <template>
+    <input
+      type="file"
+      id="fileInput"
+      on-change="_handleFile"
+      accept="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+      hidden="[[hidden]]"
+    />
+  </template>
 
-    <template>
-        <input type="file" id="fileInput" on-change="_handleFile" accept="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" hidden="[[hidden]]">
-    </template>
+  <script>
+    Polymer({
+      is: "things-import-excel",
 
-    <script>
-        Polymer({
+      behaviors: [Things.MsgBoxBehavior],
 
-            is: 'things-import-excel',
+      properties: {
+        /**
+         * en-us
+         *
+         * handel excel as json/csv
+         * defualt uses json
+         *
+         * ko-kr
+         *
+         * 출력 타입설정,defualt값은 json이다.
+         * *******
+         * @type {String}
+         */
+        handleAs: {
+          type: String,
+          value: "json",
+        },
 
-            behaviors: [
-                Things.MsgBoxBehavior
-            ],
+        /**
+         * en-us
+         *
+         * XLSX Object, can not set from out side of this componet
+         *
+         * ko-kr
+         *
+         * excel 타입은 XLSX Object만 가능,Readonly.
+         * ******
+         * @type {Object}
+         */
+        excel: {
+          type: Object,
+          value: XLSX,
+          readonly: true,
+        },
 
-            properties: {
-                /**
-                 * en-us
-                 *
-                 * handel excel as json/csv
-                 * defualt uses json
-                 *
-                 * ko-kr
-                 *
-                 * 출력 타입설정,defualt값은 json이다.
-                 * *******
-                 * @type {String}
-                 */
-                handleAs: {
-                    type: String,
-                    value: 'json'
-                },
+        /**
+         * en-us
+         *
+         * parsed data result
+         *
+         * ko-kr
+         *
+         * parsed data result
+         * ******
+         * @type {Object}
+         */
+        parsedResult: {
+          type: Object,
+          notify: true,
+        },
 
-                /**
-                 * en-us
-                 *
-                 * XLSX Object, can not set from out side of this componet
-                 *
-                 * ko-kr
-                 *
-                 * excel 타입은 XLSX Object만 가능,Readonly.
-                 * ******
-                 * @type {Object}
-                 */
-                excel: {
-                    type: Object,
-                    value: XLSX,
-                    readonly: true
-                },
+        /**
+         * en-us
+         *
+         * sheet name that you wanna to parse, if not will parse all sheet in work book
+         *
+         * ko-kr
+         *
+         * 액셀파일의 sheetName
+         * *******
+         * @type {String}
+         */
+        sheetName: {
+          type: String,
+        },
 
-                /**
-                 * en-us
-                 *
-                 * parsed data result
-                 *
-                 * ko-kr
-                 *
-                 * parsed data result
-                 * ******
-                 * @type {Object}
-                 */
-                parsedResult: {
-                    type: Object,
-                    notify: true
-                },
+        /**
+         * en-us
+         *
+         * hidden attribute
+         *
+         * ko-kr
+         *
+         * 숨김 속성
+         * ********
+         * @type {Boolean}
+         */
+        hidden: {
+          type: Boolean,
+          value: true,
+        },
 
-                /**
-                 * en-us
-                 *
-                 * sheet name that you wanna to parse, if not will parse all sheet in work book
-                 *
-                 * ko-kr
-                 *
-                 * 액셀파일의 sheetName
-                 * *******
-                 * @type {String}
-                 */
-                sheetName: {
-                    type: String
-                },
+        /**
+         * en-us
+         *
+         * Grid columns
+         *
+         * ko-kr
+         *
+         * 그리드 콜룸
+         * *****
+         * @type {Array}
+         */
+        gridColumns: {
+          type: Array,
+        },
+      },
 
-                /**
-                 * en-us
-                 *
-                 * hidden attribute
-                 *
-                 * ko-kr
-                 *
-                 * 숨김 속성
-                 * ********
-                 * @type {Boolean}
-                 */
-                hidden: {
-                    type: Boolean,
-                    value: true
-                },
+      /**
+       * en-us
+       *
+       * Check Excel Data
+       *
+       * ko-kr
+       *
+       * 액셀 데이터 체크
+       * ******
+       * @param {Array} items
+       */
+      _checkExcelData: function (items) {
+        if (!items) return false;
 
-                /**
-                 * en-us
-                 *
-                 * Grid columns
-                 *
-                 * ko-kr
-                 *
-                 * 그리드 콜룸
-                 * *****
-                 * @type {Array}
-                 */
-                gridColumns: {
-                    type: Array
-                }
-            },
+        items.forEach((item) => {
+          let fieldMapping = this._fieldMapping(item);
+          if (!fieldMapping) return false;
 
-            /**
-             * en-us
-             *
-             * Check Excel Data
-             *
-             * ko-kr
-             *
-             * 액셀 데이터 체크
-             * ******
-             * @param {Array} items
-             */
-            _checkExcelData: function(items) {
-                if (!items) return false;
-
-                items.forEach(item => {
-                    let fieldMapping = this._fieldMapping(item);
-                    if (!fieldMapping) return false;
-
-                    for (var prop in fieldMapping) {
-                        var val = item[prop];
-                        var realProp = fieldMapping[prop];
-                        delete item[prop];
-                        item[realProp] = val;
-                    }
-                });
-
-                return items;
-            },
-
-            /**
-             * 필드명이 다국어 적용되서 올라왔을 경우 처리
-             **********
-             * @param {Object} item
-             */
-            _fieldMapping: function(item) {
-                var mapping = {};
-                var valid = true;
-
-                for (var prop in item) {
-                    var fieldName = this._findFieldName(prop);
-                    if (!fieldName) {
-                        this.openInfoMsg({
-                            title: Things.DataGlobal.t('error.VALIDATION_ERROR'),
-                            text: Things.DataGlobal.t('text.invalid_input') + ' (' + prop + ')',
-                            type: 'error',
-                            timer: 10000
-                        });
-                        valid = false;
-                        break;
-                    } else {
-                        mapping[prop] = fieldName;
-                    }
-                }
-
-                return valid ? mapping : valid;
-            },
-
-            /**
-             * 그리드 컬럼에서 다국어 적용된 필드명 혹은 오브젝트의 실제 필드명으로 오브젝트의 실제 필드명을 찾아 리턴
-             *********
-             * @param {Object} item
-             */
-            _findFieldName: function(fieldName) {
-                var found = this.gridColumns.filter(function(col) {
-                    return col.name == fieldName;
-                });
-
-                if (!found || found.length == 0) {
-                    found = this.gridColumns.filter(function(col) {
-                        return col.header && col.header.text == fieldName;
-                    });
-                }
-
-                if (found && found.length > 0) {
-                    var column = found[0];
-                    if (column.styles && column.styles.iconIndex == 'resource-selector') {
-                        return (column.userData && column.userData.originalField) ? column.userData.originalField : column.name;
-                    } else {
-                        return column.name;
-                    }
-                } else {
-                    return false;
-                }
-            },
-
-            /**
-             * en-us
-             *
-             * transfer workbook to json data
-             * ko-kr
-             *
-             * workbook을 json data로 전환
-             * *******
-             *
-             */
-            _toJson: function(workbook) {
-                var result = {};
-                var me = this;
-
-                if (me.sheetName) {
-                    var items = me.excel.utils.sheet_to_row_object_array(workbook.Sheets[me.sheetName]);
-                    if (items.length > 0) {
-                        try {
-                            items = me._checkExcelData(items);
-                        } catch (e) {
-                            return false;
-                        }
-
-                        var total = items.length;
-
-                        if (me.rootProperty) {
-                            result[me.rootProperty] = items;
-                            result[me.totalProperty] = total;
-                        } else {
-                            result = items;
-                        }
-                    }
-
-                    return result;
-
-                } else {
-                    workbook.SheetNames.forEach(function(sheetName) {
-                        var roa = me.excel.utils.sheet_to_row_object_array(workbook.Sheets[sheetName]);
-                        var total = roa.length;
-
-                        if (roa.length > 0) {
-                            result[sheetName] = {};
-
-                            if (me.rootProperty) {
-                                result[sheetName][me.rootProperty] = roa;
-                                result[sheetName][me.totalProperty] = total
-                            } else {
-                                result[sheetName] = roa;
-                            }
-                        }
-                    });
-
-                    return result;
-                }
-            },
-
-            /**
-             * transfer workbood data to csv data
-             *
-             * @param {Object} workbook
-             */
-            _toCsv: function(workbook) {
-                var result = [];
-                var me = this;
-
-                if (me.sheetName) {
-                    // FIXME -
-                    var csv = me.excel.utils.sheet_to_csv(workbook.Sheets[me.sheetName]);
-                    if (csv.length > 0) result.push(csv);
-
-                } else {
-                    workbook.SheetNames.forEach(function(sheetName) {
-                        var csv = me.excel.utils.sheet_to_csv(workbook.Sheets[sheetName]);
-                        if (csv.length > 0) {
-                            result.push('SHEET: ' + sheetName);
-                            result.push('');
-                            result.push(csv);
-                            result.push('');
-                        }
-                    });
-                }
-
-                return result.join('\n');
-            },
-
-            /**
-             * en-us
-             *
-             * transfer xlsx to json and csv
-             * when finished transfer event excel-process-finish will be called
-             *
-             * ko-kr
-             *
-             * xlsx파일을 json/csv로 전환,전환완료되면 이벤트:excel-process-finish 발생
-             * ********
-             * @param {Object} workbook
-             * @event excel-process-finish
-             */
-            _processWorkbook: function(workbook) {
-                var output = null;
-
-                switch (this.handleAs) {
-                    case 'csv':
-                        output = this._toCsv(workbook);
-                        this.parsedResult = output;
-                        break;
-
-                    default:
-                        var jsonData = this._toJson(workbook);
-                        if (jsonData != false) {
-                            output = JSON.stringify(jsonData, 2, 2);
-                            this.parsedResult = JSON.parse(output);
-                        }
-                }
-
-                if (output != null) {
-                    this.fire('excel-process-finish', this.parsedResult);
-                }
-            },
-
-            /**
-             * read and register handler when file loaded
-             *
-             * @param {Object} event
-             */
-            _handleFile: function(event) {
-                var file = event.target.files[0];
-                var reader = new FileReader();
-                var me = this;
-
-                //register event listner
-                reader.onload = function(event) {
-                    var data = event.target.result;
-                    workbook = me.excel.read(data, {
-                        type: 'binary'
-                    });
-                    me._processWorkbook(workbook);
-                };
-
-                //read file as binary string
-                reader.readAsBinaryString(file);
-            },
-
-            /**
-             * en-us
-             *
-             * Clicks the invisible file input
-             *
-             * ko-kr
-             *
-             * invisible 파일 입력
-             * ********
-             */
-            import: function() {
-                var elem = this.$.fileInput;
-                if (elem && document.createEvent) {
-                    var event = document.createEvent('MouseEvents');
-                    event.initEvent('click', true, false);
-                    elem.dispatchEvent(event);
-                }
-            }
+          for (var prop in fieldMapping) {
+            var val = item[prop];
+            var realProp = fieldMapping[prop];
+            delete item[prop];
+            item[realProp] = val;
+          }
         });
 
-    </script>
+        return items;
+      },
+
+      /**
+       * 필드명이 다국어 적용되서 올라왔을 경우 처리
+       **********
+       * @param {Object} item
+       */
+      _fieldMapping: function (item) {
+        var mapping = {};
+        var valid = true;
+
+        for (var prop in item) {
+          var fieldName = this._findFieldName(prop);
+          if (!fieldName) {
+            this.openInfoMsg({
+              title: Things.DataGlobal.t("error.VALIDATION_ERROR"),
+              text: Things.DataGlobal.t("text.invalid_input") + " (" + prop + ")",
+              type: "error",
+              timer: 10000,
+            });
+            valid = false;
+            break;
+          } else {
+            mapping[prop] = fieldName;
+          }
+        }
+
+        return valid ? mapping : valid;
+      },
+
+      /**
+       * 그리드 컬럼에서 다국어 적용된 필드명 혹은 오브젝트의 실제 필드명으로 오브젝트의 실제 필드명을 찾아 리턴
+       *********
+       * @param {Object} item
+       */
+      _findFieldName: function (fieldName) {
+        var found = this.gridColumns.filter(function (col) {
+          return col.name == fieldName;
+        });
+
+        if (!found || found.length == 0) {
+          found = this.gridColumns.filter(function (col) {
+            return col.header && col.header.text == fieldName;
+          });
+        }
+
+        if (found && found.length > 0) {
+          var column = found[0];
+          if (column.styles && column.styles.iconIndex == "resource-selector") {
+            return column.userData && column.userData.originalField ? column.userData.originalField : column.name;
+          } else {
+            return column.name;
+          }
+        } else {
+          return false;
+        }
+      },
+
+      /**
+       * en-us
+       *
+       * transfer workbook to json data
+       * ko-kr
+       *
+       * workbook을 json data로 전환
+       * *******
+       *
+       */
+      _toJson: function (workbook) {
+        var result = {};
+        var me = this;
+
+        if (me.sheetName) {
+          var items = me.excel.utils.sheet_to_row_object_array(workbook.Sheets[me.sheetName]);
+          if (items.length > 0) {
+            try {
+              items = me._checkExcelData(items);
+            } catch (e) {
+              return false;
+            }
+
+            var total = items.length;
+
+            if (me.rootProperty) {
+              result[me.rootProperty] = items;
+              result[me.totalProperty] = total;
+            } else {
+              result = items;
+            }
+          }
+
+          return result;
+        } else {
+          workbook.SheetNames.forEach(function (sheetName) {
+            var roa = me.excel.utils.sheet_to_row_object_array(workbook.Sheets[sheetName]);
+            var total = roa.length;
+
+            if (roa.length > 0) {
+              result[sheetName] = {};
+
+              if (me.rootProperty) {
+                result[sheetName][me.rootProperty] = roa;
+                result[sheetName][me.totalProperty] = total;
+              } else {
+                result[sheetName] = roa;
+              }
+            }
+          });
+
+          return result;
+        }
+      },
+
+      /**
+       * transfer workbood data to csv data
+       *
+       * @param {Object} workbook
+       */
+      _toCsv: function (workbook) {
+        var result = [];
+        var me = this;
+
+        if (me.sheetName) {
+          // FIXME -
+          var csv = me.excel.utils.sheet_to_csv(workbook.Sheets[me.sheetName]);
+          if (csv.length > 0) result.push(csv);
+        } else {
+          workbook.SheetNames.forEach(function (sheetName) {
+            var csv = me.excel.utils.sheet_to_csv(workbook.Sheets[sheetName]);
+            if (csv.length > 0) {
+              result.push("SHEET: " + sheetName);
+              result.push("");
+              result.push(csv);
+              result.push("");
+            }
+          });
+        }
+
+        return result.join("\n");
+      },
+
+      /**
+       * en-us
+       *
+       * transfer xlsx to json and csv
+       * when finished transfer event excel-process-finish will be called
+       *
+       * ko-kr
+       *
+       * xlsx파일을 json/csv로 전환,전환완료되면 이벤트:excel-process-finish 발생
+       * ********
+       * @param {Object} workbook
+       * @event excel-process-finish
+       */
+      _processWorkbook: function (workbook) {
+        var output = null;
+
+        switch (this.handleAs) {
+          case "csv":
+            output = this._toCsv(workbook);
+            this.parsedResult = output;
+            break;
+
+          default:
+            var jsonData = this._toJson(workbook);
+            if (jsonData != false) {
+              output = JSON.stringify(jsonData, 2, 2);
+              this.parsedResult = JSON.parse(output);
+            }
+        }
+
+        if (output != null) {
+          this.fire("excel-process-finish", this.parsedResult);
+        }
+      },
+
+      /**
+       * read and register handler when file loaded
+       *
+       * @param {Object} event
+       */
+      _handleFile: function (event) {
+        var file = event.target.files[0];
+        var reader = new FileReader();
+        var me = this;
+
+        //register event listner
+        reader.onload = function (event) {
+          var data = event.target.result;
+          workbook = me.excel.read(data, {
+            type: "binary",
+          });
+          me._processWorkbook(workbook);
+        };
+
+        //read file as binary string
+        reader.readAsBinaryString(file);
+      },
+
+      /**
+       * en-us
+       *
+       * Clicks the invisible file input
+       *
+       * ko-kr
+       *
+       * invisible 파일 입력
+       * ********
+       */
+      import: function () {
+        var elem = this.$.fileInput;
+        if (elem && document.createEvent) {
+          var event = document.createEvent("MouseEvents");
+          event.initEvent("click", true, false);
+          elem.dispatchEvent(event);
+        }
+      },
+    });
+  </script>
 </dom-module>

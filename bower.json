@@ -1,8 +1,8 @@
 {
   "name": "things-import-excel",
-  "version": "v2.2.2",
+  "version": "v2.2.3",
   "authors": [
-    "Hatio Lab. <heartyoh@hatiolab.com>"
+    "Shenzhen Weixun"
   ],
   "description": "Import Excel은 JS-XLSX를 이용하여 정형화된 Excel을 Json또는 CSV로 바꾸는 도구다.",
   "keywords": [
@@ -11,8 +11,6 @@
     "seed"
   ],
   "main": "things-import-excel.html",
-  "license": "http://license.hatiolab.com/EULA",
-  "homepage": "http://elements.hatiolab.com/",
   "ignore": [
     "/.*",
     "/test/"
